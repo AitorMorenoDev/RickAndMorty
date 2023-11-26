@@ -22,7 +22,7 @@ public class Management {
             option = sc.nextInt();
             System.out.println();
             switch (option) {
-                case 1 -> ResetDatabase();
+                case 1 -> Database.clearTables(), Database.fillTables();
                 case 2 -> AddChar();
                 case 3 -> Search();
                 case 4 -> CharsWithoutEpisode();
@@ -30,10 +30,6 @@ public class Management {
                 default -> System.out.println("Invalid option \n");
             }
         } while (option != 5);
-    }
-
-    private static void ResetDatabase() {
-
     }
 
     private static void AddChar() {
