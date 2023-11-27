@@ -46,6 +46,8 @@ public class Database {
             statement.executeUpdate("DELETE FROM location");
             statement.executeUpdate("DELETE FROM character_in_episode");
 
+            System.out.println("Tables cleared successfully");
+
             // Close connection
             connection.close();
 
@@ -86,15 +88,36 @@ public class Database {
 
     // Different methods to get the data from the API according to the type of data
     private static List<Character> getCharacters() {
-        return fetchData("https://rickandmortyapi.com/api/character/", 826, Character.class);
+        try (InputStream inputStream = new URL("https://rickandmortyapi.com/api/character/").openStream();
+             InputStreamReader reader = new InputStreamReader(inputStream)) {
+            JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+            int maxID = obj.get("info").getAsJsonObject().get("count").getAsInt();
+            return fetchData("https://rickandmortyapi.com/api/character/", maxID, Character.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static List<Location> getLocations() {
-        return fetchData("https://rickandmortyapi.com/api/location/", 126, Location.class);
+        try (InputStream inputStream = new URL("https://rickandmortyapi.com/api/location/").openStream();
+             InputStreamReader reader = new InputStreamReader(inputStream)) {
+            JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+            int maxID = obj.get("info").getAsJsonObject().get("count").getAsInt();
+            return fetchData("https://rickandmortyapi.com/api/location/", maxID, Location.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static List<Episode> getEpisodes() {
-        return fetchData("https://rickandmortyapi.com/api/episode/", 51, Episode.class);
+        try (InputStream inputStream = new URL("https://rickandmortyapi.com/api/episode/").openStream();
+             InputStreamReader reader = new InputStreamReader(inputStream)) {
+            JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+            int maxID = obj.get("info").getAsJsonObject().get("count").getAsInt();
+            return fetchData("https://rickandmortyapi.com/api/episode/", maxID, Episode.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void getApiData() {
@@ -166,11 +189,6 @@ public class Database {
                 throw new RuntimeException(e);
             }
             preparedStatement.setString(4, episode.getEpisode());
-
-            /*
-            List<String> characterUrls = episode.getCharacters();
-            Array characterArray = preparedStatement.getConnection().createArrayOf("VARCHAR", characterUrls.toArray());
-            preparedStatement.setArray(5, characterArray); */
         }
     }
 
@@ -227,9 +245,11 @@ public class Database {
             // After that, load data from the API
             getApiData();
 
-            // Then, insert data into the tables
+            // Then, insert data into the tables --------------------
             System.out.println("Inserting data into the database, please, wait...");
-            String insertUnknown = "INSERT INTO location (id, name, type, dimension) VALUES (0, 'Unknown', 'Unknown', 'Unknown')";
+                // Insert unknown location with id value 0
+                String insertUnknown = "INSERT INTO location (id, name, type, dimension) VALUES (0, 'Unknown', 'Unknown', 'Unknown')";
+
             try (PreparedStatement preparedStatement = connection.prepareStatement(insertUnknown)) {
                 preparedStatement.executeUpdate();
             }
@@ -237,7 +257,7 @@ public class Database {
             insertData(connection, getEpisodes(), "episode");
             insertData(connection, getCharacters(), "character");
             insertCharacterInEpisode(connection, getEpisodes());
-
+            // ------------------------------------------------------
 
             // Finally, close connection
             connection.close();
