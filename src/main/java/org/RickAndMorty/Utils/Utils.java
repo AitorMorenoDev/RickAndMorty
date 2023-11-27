@@ -19,7 +19,10 @@ public class Utils {
     private static final String PASSWORD = "postgre";
     static Scanner sc = new Scanner(System.in);
 
+
+    // METHODS TO ADD CHARACTERS TO THE DATABASE
     public static void addCharStatement() {
+        // Method to add a character to the database using Statement
         try {
             // Load the driver and connect to the database
             Class.forName("org.postgresql.Driver");
@@ -63,6 +66,7 @@ public class Utils {
     }
 
     public static void addCharPreparedStatement() {
+        // Method to add a character to the database using PreparedStatement
         try {
             // Load the driver and connect to the database
             Class.forName("org.postgresql.Driver");
@@ -94,6 +98,8 @@ public class Utils {
     }
 
     public static Character askCharInfo() {
+
+        // Method to ask the character's info to the user
 
         Character character = new Character();
 
@@ -152,7 +158,10 @@ public class Utils {
         return character;
     }
 
+
+    // METHODS TO MANAGE THE CALLABLE STATEMENTS OF THE DATABASE
     public static List<Character> SearchByText(String text) throws SQLException {
+        // Method to search characters by text using a CallableStatement
         List<Character> charactersFound = new ArrayList<>();
 
         try {
@@ -195,4 +204,45 @@ public class Utils {
 
         return charactersFound;
     }
+
+    public static List<Character> CharactersWithoutEpisode() {
+        // Method to obtain the characters without episode using a CallableStatement
+        List<Character> charactersWithoutEpisode = new ArrayList<>();
+
+        try {
+            // Load the driver and connect to the database
+            Class.forName("org.postgresql.Driver");
+            Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+
+            // Call the stored procedure using CallableStatement
+            try (CallableStatement callableStatement = connection.prepareCall("{call characters_without_episode()}")) {
+                // Execute the callable statement
+                ResultSet rs = callableStatement.executeQuery();
+
+                // Process the results and add them to the list
+                while (rs.next()) {
+                    Character character = new Character();
+                    character.setId(rs.getInt("id"));
+                    character.setName(rs.getString("name"));
+                    character.setStatus(rs.getString("status"));
+                    character.setSpecies(rs.getString("species"));
+                    character.setType(rs.getString("type"));
+                    character.setGender(rs.getString("gender"));
+                    character.setIdOriginAux(rs.getInt("id_origin"));
+                    character.setIdLocationAux(rs.getInt("id_location"));
+
+                    charactersWithoutEpisode.add(character);
+                }
+            }
+
+            // Close the connection
+            connection.close();
+
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return charactersWithoutEpisode;
+    }
+
 }

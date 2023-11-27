@@ -3,6 +3,7 @@ package org.RickAndMorty;
 import org.RickAndMorty.Utils.Database;
 import org.RickAndMorty.Utils.Utils;
 
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Management {
@@ -51,11 +52,28 @@ public class Management {
     }
 
     private static void Search() {
+        System.out.println("Enter the text you want to search: ");
+        String text = sc.nextLine();
 
+        try {
+            Utils.SearchByText(text);
+            if (Utils.SearchByText(text).isEmpty()) {
+                System.out.println("No results found");
+            } else {
+                System.out.println(Utils.SearchByText(text));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void CharsWithoutEpisode() {
-
+        Utils.CharactersWithoutEpisode();
+        if (Utils.CharactersWithoutEpisode().isEmpty()) {
+            System.out.println("No results found");
+        } else {
+            System.out.println(Utils.CharactersWithoutEpisode());
+        }
     }
 
     private static void Exit() {
