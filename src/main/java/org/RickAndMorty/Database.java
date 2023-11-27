@@ -166,6 +166,11 @@ public class Database {
                 throw new RuntimeException(e);
             }
             preparedStatement.setString(4, episode.getEpisode());
+
+            /*
+            List<String> characterUrls = episode.getCharacters();
+            Array characterArray = preparedStatement.getConnection().createArrayOf("VARCHAR", characterUrls.toArray());
+            preparedStatement.setArray(5, characterArray); */
         }
     }
 
@@ -177,6 +182,32 @@ public class Database {
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
+        }
+    }
+
+    private static <T> void insertCharacterInEpisode(Connection connection, List<T> data) {
+        String insertQuery = "INSERT INTO character_in_episode (id_episode, id_character) VALUES (?, ?)";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
+            for (T item : data) {
+                if (item instanceof Episode) {
+                    Episode episode = (Episode) item;
+                    int episodeId = episode.getId();
+
+                    for (String characterUrl : episode.getCharacters()) {
+                        int lastSlash = characterUrl.lastIndexOf("/");
+                        int characterId = Integer.parseInt(characterUrl.substring(lastSlash + 1));
+
+                        preparedStatement.setInt(1, episodeId);
+                        preparedStatement.setInt(2, characterId);
+
+                        preparedStatement.addBatch();
+                    }
+                }
+            }
+            preparedStatement.executeBatch();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -205,6 +236,8 @@ public class Database {
             insertData(connection, getLocations(), "location");
             insertData(connection, getEpisodes(), "episode");
             insertData(connection, getCharacters(), "character");
+            insertCharacterInEpisode(connection, getEpisodes());
+
 
             // Finally, close connection
             connection.close();
