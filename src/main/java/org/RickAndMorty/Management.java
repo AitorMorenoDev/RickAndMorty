@@ -1,5 +1,8 @@
 package org.RickAndMorty;
 
+import org.RickAndMorty.Utils.Database;
+import org.RickAndMorty.Utils.Utils;
+
 import java.util.Scanner;
 
 public class Management {
@@ -32,7 +35,19 @@ public class Management {
     }
 
     private static void AddChar() {
-
+        int option;
+        do {
+            System.out.println("Enter the option of the way you want to add the character: ");
+            System.out.println("1. Add by 'Statement'");
+            System.out.println("2. Add by 'PreparedStatement'");
+            System.out.println();
+            option = sc.nextInt();
+            switch (option) {
+                case 1 -> Utils.addCharStatement();
+                case 2 -> Utils.addCharPreparedStatement();
+                default -> System.out.println("Invalid option \n");
+            }
+        } while (option != 1 && option != 2);
     }
 
     private static void Search() {

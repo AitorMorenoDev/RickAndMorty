@@ -3,7 +3,7 @@ package org.RickAndMorty.Data;
 import java.util.List;
 
 public class Character {
-    private int id;
+    private int id, idOriginAux, idLocationAux;
     private String name, status, species, type, gender, image, url;
     private List<String> episodes;
     OriginAux origin;
@@ -23,6 +23,10 @@ public class Character {
         this.image = image;
         this.episodes = episodes;
         this.url = url;
+    }
+
+    public Character() {
+
     }
 
     public int getId() {
@@ -111,5 +115,21 @@ public class Character {
 
     public void setLocation(LocationAux location) {
         this.location = location;
+    }
+
+    public void setIdOriginAux(int idOriginAux) {
+        this.idOriginAux = idOriginAux;
+    }
+
+    public void setIdLocationAux(int idLocationAux) {
+        this.idLocationAux = idLocationAux;
+    }
+
+    public int getIdOriginAux() {
+        return idOriginAux;
+    }
+
+    public int getIdLocationAux() {
+        return idLocationAux;
     }
 }

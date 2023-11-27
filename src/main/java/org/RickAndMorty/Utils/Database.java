@@ -1,4 +1,9 @@
-package org.RickAndMorty;
+/*
+This class is used to connect to the database and fill it with the data from the API
+For other methods related to the database, check the Utils class
+ */
+
+package org.RickAndMorty.Utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -27,7 +32,7 @@ public class Database {
     private static final String PASSWORD = "postgre";
 
 
-    //Method to clear the tables
+    // Method to clear the tables
     private static void clearTables(){
 
         try {
@@ -56,7 +61,7 @@ public class Database {
         }
     }
 
-    //METHODS TO GET DATA FROM THE API
+    // METHODS TO GET DATA FROM THE API
     private static <T> List<T> fetchData(String apiUrl, int maxID, Class<T> dataType) {
         // Method to fetch data from the API, in order to avoid repeating code
         List<T> data = new ArrayList<>();
@@ -126,10 +131,12 @@ public class Database {
         getCharacters();
         getLocations();
         getEpisodes();
+        System.out.println("Data loaded successfully");
+        System.out.println();
     }
 
 
-    //METHODS TO INSERT DATA INTO THE DATABASE
+    // METHODS TO INSERT DATA INTO THE DATABASE
     private static String generateInsertQuery(String tableName) {
         switch (tableName) {
             case "character" -> {
@@ -230,7 +237,7 @@ public class Database {
     }
 
 
-    //Method to fill the tables
+    // Method to fill the tables
     public static void fillTables() {
         try {
             // Load the driver
@@ -258,6 +265,9 @@ public class Database {
             insertData(connection, getCharacters(), "character");
             insertCharacterInEpisode(connection, getEpisodes());
             // ------------------------------------------------------
+
+            System.out.println("Data inserted successfully");
+            System.out.println();
 
             // Finally, close connection
             connection.close();
