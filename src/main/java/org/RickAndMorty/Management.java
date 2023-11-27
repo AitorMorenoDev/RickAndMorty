@@ -1,6 +1,5 @@
 package org.RickAndMorty;
 
-import java.io.IOException;
 import java.util.Scanner;
 
 public class Management {
@@ -15,14 +14,14 @@ public class Management {
         System.out.println();
     }
 
-    public static void ExecuteMenu() throws IOException {
+    public static void ExecuteMenu() {
         int option;
         do {
             ShowMenu();
             option = sc.nextInt();
             System.out.println();
             switch (option) {
-                case 1 -> Database.clearTables(), Database.fillTables();
+                case 1 -> Database.fillTables();
                 case 2 -> AddChar();
                 case 3 -> Search();
                 case 4 -> CharsWithoutEpisode();
