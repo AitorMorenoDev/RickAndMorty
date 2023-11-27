@@ -73,7 +73,7 @@ public class Episode {
 
     public Date getSqlDate() throws ParseException {
         String patron = "MMMM d, yyyy";
-        SimpleDateFormat sdf = new SimpleDateFormat(patron);
+        SimpleDateFormat sdf = new SimpleDateFormat(patron, Locale.ENGLISH);
 
         java.util.Date usefulDate = sdf.parse(air_date);
         return new Date(usefulDate.getTime());
