@@ -21,14 +21,16 @@ import java.util.List;
 
 public class Database {
 
+    // Declaration of the variables to connect to the database
     private static final String URL = "jdbc:postgresql://localhost:5432/serie";
     private static final String USER = "postgres";
     private static final String PASSWORD = "postgre";
 
+
+    //Method to clear the tables
     private static void clearTables(){
 
         try {
-
             // Load the driver
             Class.forName("org.postgresql.Driver");
 
@@ -52,7 +54,9 @@ public class Database {
         }
     }
 
+    //METHODS TO GET DATA FROM THE API
     private static <T> List<T> fetchData(String apiUrl, int maxID, Class<T> dataType) {
+        // Method to fetch data from the API, in order to avoid repeating code
         List<T> data = new ArrayList<>();
         int id = 1;
 
@@ -80,6 +84,7 @@ public class Database {
         return data;
     }
 
+    // Different methods to get the data from the API according to the type of data
     private static List<Character> getCharacters() {
         return fetchData("https://rickandmortyapi.com/api/character/", 826, Character.class);
     }
@@ -93,12 +98,15 @@ public class Database {
     }
 
     private static void getApiData() {
+        // Method which calls the methods above to get the whole data from the API
         System.out.println("Loading data from the API, please, wait...");
         getCharacters();
         getLocations();
         getEpisodes();
     }
 
+
+    //METHODS TO INSERT DATA INTO THE DATABASE
     private static String generateInsertQuery(String tableName) {
         switch (tableName) {
             case "character" -> {
@@ -123,8 +131,25 @@ public class Database {
             preparedStatement.setString(4, character.getSpecies());
             preparedStatement.setString(5, character.getType());
             preparedStatement.setString(6, character.getGender());
-            preparedStatement.setInt(7, character.getId_origin());
-            preparedStatement.setInt(8, character.getId_location());
+
+           String origin = character.getOrigin().getUrl();
+            int lastSlashOrigin = origin.lastIndexOf("/");
+            if (!origin.equals("")) {
+                int idOrigin = Integer.parseInt(origin.substring(lastSlashOrigin + 1));
+                preparedStatement.setInt(7, idOrigin);
+            } else {
+                preparedStatement.setInt(7, 0);
+            }
+
+            String location = character.getLocation().getUrl();
+            int lastSlashLocation = location.lastIndexOf("/");
+            if (!location.equals("")) {
+                int idLocation = Integer.parseInt(location.substring(lastSlashLocation + 1));
+                preparedStatement.setInt(8, idLocation);
+            } else {
+                preparedStatement.setInt(8, 0);
+            }
+
         } else if (item instanceof Location) {
             Location location = (Location) item;
             preparedStatement.setInt(1, location.getId());
@@ -156,6 +181,7 @@ public class Database {
     }
 
 
+    //Method to fill the tables
     public static void fillTables() {
         try {
             // Load the driver
@@ -176,9 +202,9 @@ public class Database {
             try (PreparedStatement preparedStatement = connection.prepareStatement(insertUnknown)) {
                 preparedStatement.executeUpdate();
             }
-            insertData(connection, getCharacters(), "character");
             insertData(connection, getLocations(), "location");
             insertData(connection, getEpisodes(), "episode");
+            insertData(connection, getCharacters(), "character");
 
             // Finally, close connection
             connection.close();
