@@ -1,5 +1,5 @@
 /*
-This class will contain methods that will be used to manage the database, like adding a character, searching by text, etc.
+This class contains methods that will be used to manage the database, like adding a character, searching by text, etc.
  */
 
 package org.RickAndMorty.Utils;
@@ -9,7 +9,9 @@ import org.RickAndMorty.Data.Character;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Utils {
 
@@ -22,172 +24,209 @@ public class Utils {
 
     // METHODS TO ADD CHARACTERS TO THE DATABASE
     public static void addCharStatement() {
-        // Method to add a character to the database using Statement
         try {
             // Load the driver and connect to the database
             Class.forName("org.postgresql.Driver");
-            Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
 
-            // Create a Statement object to execute SQL queries
-            Statement statement = connection.createStatement();
+            // Method to add a character to the database using Statement
+            try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+                 Statement statement = connection.createStatement()) {
 
-            /* ---------------------------------------------
 
-            Esto en caso de no poder poner autoincrementable el ID en la base de datos
+                // Get the maximum ID of the character
+                int newId = getMaxID(statement) + 1;
 
-            // Consultar el valor actual del ID más alto
-            ResultSet resultSet = statement.executeQuery("SELECT MAX(id) FROM character");
-            int currentMaxId = 0;
-            if (resultSet.next()) {
-                currentMaxId = resultSet.getInt(1);
+                // Call the method to ask the character's info
+                Character newCharacter = askCharInfo();
+
+                // Crate and execute the SQL query by Statement
+                String sqlQuery = "INSERT INTO character VALUES (" + newId + ", '" + newCharacter.getName() + "', '" +
+                        newCharacter.getStatus() + "', '" + newCharacter.getSpecies() + "', '" + newCharacter.getType() + "', '" +
+                        newCharacter.getGender() + "', '" + newCharacter.getIdOriginAux() + "', '" + newCharacter.getIdLocationAux() + "');";
+
+                statement.executeUpdate(sqlQuery);
             }
-
-            // Incrementar el valor del ID
-            int newId = currentMaxId + 1;
-
-            --------------------------------------------- */
-
-            // Call the method to ask the character's info
-            Character newCharacter = askCharInfo();
-
-            // Crate and execute the SQL query by Statement
-            String sqlQuery = "INSERT INTO character VALUES (" + /*newId*/ "DEFAULT" + ", '" + newCharacter.getName() + "', '" +
-                    newCharacter.getStatus() + "', '" + newCharacter.getSpecies() + "', '" + newCharacter.getType() + "', '" +
-                    newCharacter.getGender() + "', '" + newCharacter.getIdOriginAux()+ "', '" + newCharacter.getIdLocationAux() + "');";
-
-            statement.executeUpdate(sqlQuery);
-
-            // Close the connection
-            connection.close();
-
         } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static void addCharPreparedStatement() {
-        // Method to add a character to the database using PreparedStatement
         try {
             // Load the driver and connect to the database
             Class.forName("org.postgresql.Driver");
-            Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
 
-            // Call the method to ask the character's info
-            Character newCharacter = askCharInfo();
+            // Method to add a character to the database using PreparedStatement
+            try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+                 Statement statement = connection.createStatement()) {
 
-            // Create and execute the SQL query by PreparedStatement
-            String sqlQuery = "INSERT INTO character VALUES (" + 835 + ", ?, ?, ?, ?, ?, ?, ?);";
+                // Consult the maximum ID of the table and increment it by 1
+                int newID = getMaxID(statement) + 1;
 
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-            preparedStatement.setString(1, newCharacter.getName());
-            preparedStatement.setString(2, newCharacter.getStatus());
-            preparedStatement.setString(3, newCharacter.getSpecies());
-            preparedStatement.setString(4, newCharacter.getType());
-            preparedStatement.setString(5, newCharacter.getGender());
-            preparedStatement.setInt(6, newCharacter.getIdOriginAux());
-            preparedStatement.setInt(7, newCharacter.getIdLocationAux());
+                // Create and execute the SQL query by PreparedStatement
+                String sqlQuery = "INSERT INTO character VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+                PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 
-            preparedStatement.executeUpdate();
+                // Call the method to ask the character's info
+                Character newCharacter = askCharInfo();
 
-            // Close the connection
-            connection.close();
+                preparedStatement.setInt(1, newID);
+                preparedStatement.setString(2, newCharacter.getName());
+                preparedStatement.setString(3, newCharacter.getStatus());
+                preparedStatement.setString(4, newCharacter.getSpecies());
+                preparedStatement.setString(5, newCharacter.getType());
+                preparedStatement.setString(6, newCharacter.getGender());
+                preparedStatement.setInt(7, newCharacter.getIdOriginAux());
+                preparedStatement.setInt(8, newCharacter.getIdLocationAux());
+
+                preparedStatement.executeUpdate();
+            }
 
         } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static Character askCharInfo() {
-
-        // Method to ask the character's info to the user
-
+    // Method to ask the character's info to the user
+    private static Character askCharInfo() {
         Character character = new Character();
-
         System.out.println("Enter the character's info below to add it into the database: ");
 
-        System.out.print("Name: ");
-        character.setName(sc.nextLine());
+        character.setName(getStringInput("Name: "));
 
-        System.out.print("Status: \n 1. Alive \n 2. Dead \n 3. Unknown \n");
-        int statusOpt = sc.nextInt();
-        switch (statusOpt) {
-            case 1 -> character.setStatus("Alive");
-            case 2 -> character.setStatus("Dead");
-            case 3 -> character.setStatus("Unknown");
-            default -> System.out.println("Invalid option \n");
-        }
+        System.out.println("Status: \n 1. Alive \n 2. Dead \n 3. Unknown");
+        character.setStatus(getStringInputWithMapping("Status: ", Map.of(1, "Alive", 2, "Dead", 3, "Unknown")));
 
-        System.out.print("Species: \n 1. Human \n 2. Alien \n 3. Humanoid \n 4. Mythological Creature \n 5. Animal \n " +
-                "6. Robot \n 7. Cronenberg \n 8. Disease \n 9. Poopybutthole \n 10. Unknown \n");
-        int speciesOpt = sc.nextInt();
-        switch (speciesOpt) {
-            case 1 -> character.setSpecies("Human");
-            case 2 -> character.setSpecies("Alien");
-            case 3 -> character.setSpecies("Humanoid");
-            case 4 -> character.setSpecies("Mythological Creature");
-            case 5 -> character.setSpecies("Animal");
-            case 6 -> character.setSpecies("Robot");
-            case 7 -> character.setSpecies("Cronenberg");
-            case 8 -> character.setSpecies("Disease");
-            case 9 -> character.setSpecies("Poopybutthole");
-            case 10 -> character.setSpecies("Unknown");
-            default -> System.out.println("Invalid option \n");
-        }
+        System.out.println("Species: \n 1. Human \n 2. Alien \n 3. Humanoid \n 4. Mythological Creature \n 5. Animal \n " +
+                "6. Robot \n 7. Cronenberg \n 8. Disease \n 9. Poopybutthole \n 10. Unknown");
+        character.setSpecies(getStringInputWithMapping("Species: ", Map.of(1, "Human", 2, "Alien", 3, "Humanoid",
+                4, "Mythological Creature", 5, "Animal", 6, "Robot", 7, "Cronenberg",
+                8, "Disease", 9, "Poopybutthole", 10, "Unknown")));
 
-        // Duda aquí (Muchos tipos de especies, locura preguntar todos)
-        System.out.print("Type: ");
-        character.setType(sc.nextLine());
-
-        System.out.println("Gender: \n 1. Male \n 2. Female \n 3. Genderless \n 4. Unknown \n");
-        int genderOpt = sc.nextInt();
-        switch (genderOpt) {
-            case 1 -> character.setGender("Male");
-            case 2 -> character.setGender("Female");
-            case 3 -> character.setGender("Genderless");
-            case 4 -> character.setGender("Unknown");
-            default -> System.out.println("Invalid option \n");
-        }
-
-        // Duda aquí, ¿preguntar al usuario por el ID de la localización y el origen?
-        System.out.println("Origin: ");
-        character.setIdOriginAux(sc.nextInt());
         sc.nextLine();
-        System.out.println("Location: ");
-        character.setIdLocationAux(sc.nextInt());
+
+        character.setType(getStringInput("Type: "));
+
+        System.out.println("Gender: \n 1. Male \n 2. Female \n 3. Genderless \n 4. Unknown");
+        character.setGender(getStringInputWithMapping("Gender: ", Map.of(1, "Male", 2, "Female",
+                3, "Genderless", 4, "Unknown")));
+
+        int idOrigin;
+        do {
+            idOrigin = getIntInput("Origin: ");
+            if (locationExists(idOrigin)) {
+                System.out.println("Error: The specified Origin ID does not exist in the Location table. Please, enter a valid ID.");
+            } else {
+                character.setIdOriginAux(idOrigin);
+            }
+        } while (locationExists(idOrigin));
+
+        int idLocation;
+        do {
+            idLocation = getIntInput("Location: ");
+            if (locationExists(idLocation)) {
+                System.out.println("Error: The specified Location ID does not exist in the Location table. Please, enter a valid ID.");
+            } else {
+                character.setIdLocationAux(idLocation);
+            }
+        } while (locationExists(idLocation));
+
+        sc.nextLine();
 
         return character;
     }
 
+    // Auxiliary methods to ask the character's info to the user
+    private static String getStringInput(String text) {
+        String userInput;
+
+        do {
+            System.out.print(text);
+            userInput = sc.nextLine().trim();
+
+            if (userInput.isEmpty()) {
+                System.out.println("This field cannot be empty. Please enter a valid string.");
+            }
+
+        } while (userInput.isEmpty());
+
+        return userInput;
+    }
+
+    private static String getStringInputWithMapping(String text, Map<Integer, String> options) {
+        while (true) {
+            int userInput = getIntInput(text);
+
+            if (options.containsKey(userInput)) {
+                return options.get(userInput);
+            } else {
+                System.out.println("Invalid option. Please enter a valid option.");
+            }
+        }
+    }
+
+    private static int getIntInput(String text) {
+        System.out.print(text);
+        while (!sc.hasNextInt()) {
+            System.out.println("Invalid input. Please, enter a valid integer.");
+            sc.next();
+            System.out.print(text);
+        }
+        return sc.nextInt();
+    }
+
+    // Method to obtain the maximum ID of the table
+    private static int getMaxID(Statement statement) throws SQLException {
+        ResultSet resultSet = statement.executeQuery("SELECT MAX(id) FROM character");
+        return resultSet.next() ? resultSet.getInt(1) : 0;
+    }
+
+    // Boolean method to check if the id (origin and location) exists in the database
+    private static boolean locationExists(int id) {
+        try {
+            Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) FROM Location WHERE id = ?")) {
+                preparedStatement.setInt(1, id);
+                ResultSet rs = preparedStatement.executeQuery();
+                rs.next();
+                int count = rs.getInt(1);
+                return count <= 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return true;
+        }
+    }
+
 
     // METHODS TO MANAGE THE CALLABLE STATEMENTS OF THE DATABASE
-    public static List<Character> SearchByText(String text) throws SQLException {
-        // Method to search characters by text using a CallableStatement
+    // Method to search characters by text using a CallableStatement
+    public static String SearchByText(String text) throws SQLException {
         List<Character> charactersFound = new ArrayList<>();
 
         try {
             Class.forName("org.postgresql.Driver");
             Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-            try (CallableStatement cs = connection.prepareCall("{ ? = call search_characters(?) }")) {
-                cs.registerOutParameter(1, Types.OTHER);
-                cs.setString(2, text);
+            try (CallableStatement cs = connection.prepareCall("{call search_characters(?) }")) {
+                cs.setString(1, text);
 
                 // Execute the callable statement
                 cs.execute();
 
                 // Obtain the result set
-                ResultSet resultSet = (ResultSet) cs.getObject(1);
+                ResultSet rs = cs.executeQuery();
 
                 // Process the results and add them to the list
-                while (resultSet.next()) {
+                while (rs.next()) {
                     Character character = new Character();
-                    character.setId(resultSet.getInt("id"));
-                    character.setName(resultSet.getString("name"));
-                    character.setStatus(resultSet.getString("status"));
-                    character.setSpecies(resultSet.getString("species"));
-                    character.setType(resultSet.getString("type"));
-                    character.setGender(resultSet.getString("gender"));
-                    character.setIdOriginAux(resultSet.getInt("id_origin"));
-                    character.setIdLocationAux(resultSet.getInt("id_location"));
+                    character.setId(rs.getInt("id"));
+                    character.setName(rs.getString("name"));
+                    character.setStatus(rs.getString("status"));
+                    character.setSpecies(rs.getString("species"));
+                    character.setType(rs.getString("type"));
+                    character.setGender(rs.getString("gender"));
+                    character.setIdOriginAux(rs.getInt("id_origin"));
+                    character.setIdLocationAux(rs.getInt("id_location"));
 
                     charactersFound.add(character);
                 }
@@ -202,11 +241,11 @@ public class Utils {
             throw new RuntimeException(e);
         }
 
-        return charactersFound;
+        return charactersFound.stream().map(Character::toString).collect(Collectors.joining("\n"));
     }
 
-    public static List<Character> CharactersWithoutEpisode() {
-        // Method to obtain the characters without episode using a CallableStatement
+    // Method to obtain the characters without episode using a CallableStatement
+    public static String CharactersWithoutEpisode() {
         List<Character> charactersWithoutEpisode = new ArrayList<>();
 
         try {
@@ -215,9 +254,9 @@ public class Utils {
             Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
 
             // Call the stored procedure using CallableStatement
-            try (CallableStatement callableStatement = connection.prepareCall("{call characters_without_episode()}")) {
+            try (CallableStatement cs = connection.prepareCall("{call characters_without_episode()}")) {
                 // Execute the callable statement
-                ResultSet rs = callableStatement.executeQuery();
+                ResultSet rs = cs.executeQuery();
 
                 // Process the results and add them to the list
                 while (rs.next()) {
@@ -242,7 +281,7 @@ public class Utils {
             throw new RuntimeException(e);
         }
 
-        return charactersWithoutEpisode;
+        return charactersWithoutEpisode.stream().map(Character::toString).collect(Collectors.joining("\n"));
     }
 
 }

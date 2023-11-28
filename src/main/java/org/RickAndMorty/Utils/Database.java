@@ -31,10 +31,8 @@ public class Database {
     private static final String USER = "postgres";
     private static final String PASSWORD = "postgre";
 
-
     // Method to clear the tables
     private static void clearTables(){
-
         try {
             // Load the driver
             Class.forName("org.postgresql.Driver");
@@ -62,8 +60,8 @@ public class Database {
     }
 
     // METHODS TO GET DATA FROM THE API
+    // Method to fetch data from the API, in order to avoid repeating code
     private static <T> List<T> fetchData(String apiUrl, int maxID, Class<T> dataType) {
-        // Method to fetch data from the API, in order to avoid repeating code
         List<T> data = new ArrayList<>();
         int id = 1;
 
@@ -137,6 +135,7 @@ public class Database {
 
 
     // METHODS TO INSERT DATA INTO THE DATABASE
+    // Method to generate the insert query according to the table name
     private static String generateInsertQuery(String tableName) {
         switch (tableName) {
             case "character" -> {
@@ -152,6 +151,7 @@ public class Database {
         }
     }
 
+    // Method to set the values of the prepared statement according to the type of data
     private static <T> void setPreparedStatementValues(PreparedStatement preparedStatement, T item) throws SQLException {
         if (item instanceof Character) {
             Character character = (Character) item;
@@ -199,6 +199,7 @@ public class Database {
         }
     }
 
+    // Method to insert data into the database
     private static <T> void insertData(Connection connection, List<T> data, String tableName) throws SQLException {
         String insertQuery = generateInsertQuery(tableName);
         try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
@@ -210,6 +211,7 @@ public class Database {
         }
     }
 
+    // Method to insert data into the character_in_episode table
     private static <T> void insertCharacterInEpisode(Connection connection, List<T> data) {
         String insertQuery = "INSERT INTO character_in_episode (id_episode, id_character) VALUES (?, ?)";
 
@@ -235,7 +237,6 @@ public class Database {
             throw new RuntimeException(e);
         }
     }
-
 
     // Method to fill the tables
     public static void fillTables() {

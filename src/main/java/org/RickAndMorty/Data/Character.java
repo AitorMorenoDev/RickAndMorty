@@ -1,33 +1,12 @@
 package org.RickAndMorty.Data;
 
-import java.util.List;
-
 public class Character {
     private int id, idOriginAux, idLocationAux;
-    private String name, status, species, type, gender, image, url;
-    private List<String> episodes;
+    private String name, status, species, type, gender;
     OriginAux origin;
     LocationAux location;
 
-
-    public Character(int id, String name, String status, String species, String type, String gender,
-                     OriginAux origin, LocationAux location, String image, List<String> episodes, String url) {
-        this.id = id;
-        this.name = name;
-        this.status = status;
-        this.species = species;
-        this.type = type;
-        this.gender = gender;
-        this.origin = origin;
-        this.location = location;
-        this.image = image;
-        this.episodes = episodes;
-        this.url = url;
-    }
-
-    public Character() {
-
-    }
+    public Character() {}
 
     public int getId() {
         return id;
@@ -77,44 +56,12 @@ public class Character {
         this.gender = gender;
     }
 
-    public String getImage() {
-        return image;
-    }
-
-    public void setImage(String image) {
-        this.image = image;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public List<String> getEpisodes() {
-        return episodes;
-    }
-
-    public void setEpisodes(List<String> episodes) {
-        this.episodes = episodes;
-    }
-
     public OriginAux getOrigin() {
         return origin;
     }
 
-    public void setOrigin(OriginAux origin) {
-        this.origin = origin;
-    }
-
     public LocationAux getLocation() {
         return location;
-    }
-
-    public void setLocation(LocationAux location) {
-        this.location = location;
     }
 
     public void setIdOriginAux(int idOriginAux) {
@@ -131,5 +78,10 @@ public class Character {
 
     public int getIdLocationAux() {
         return idLocationAux;
+    }
+
+    @Override
+    public String toString() {
+        return name + " - " + status + ", " + species + ", " + type + ", " + gender + ".";
     }
 }

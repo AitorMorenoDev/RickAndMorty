@@ -1,3 +1,7 @@
+/*
+    Class that contains the methods to execute the menu of the program
+ */
+
 package org.RickAndMorty;
 
 import org.RickAndMorty.Utils.Database;
@@ -52,18 +56,23 @@ public class Management {
     }
 
     private static void Search() {
+
+        // I Had to declare another scanner because the first one was giving me problems
+        Scanner sc2 = new Scanner(System.in);
         System.out.println("Enter the text you want to search: ");
-        String text = sc.nextLine();
+        String text = sc2.nextLine();
 
         try {
             Utils.SearchByText(text);
             if (Utils.SearchByText(text).isEmpty()) {
                 System.out.println("No results found");
+                System.out.println();
             } else {
                 System.out.println(Utils.SearchByText(text));
+                System.out.println();
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println(e.getMessage());
         }
     }
 
@@ -71,8 +80,11 @@ public class Management {
         Utils.CharactersWithoutEpisode();
         if (Utils.CharactersWithoutEpisode().isEmpty()) {
             System.out.println("No results found");
+            System.out.println();
         } else {
+            System.out.println("The next characters don't appear in any episode: ");
             System.out.println(Utils.CharactersWithoutEpisode());
+            System.out.println();
         }
     }
 
